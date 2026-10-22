@@ -92,38 +92,45 @@ All Part A tests reuse the user journey in `journey.js` (home page → quotes �
 ## Part B — Reflection
 
 ### 1. Fill in the results table for Steps A1 to A5.
-**Answer:** Completed in the Part A results table above using actual results from the five runs.
+**Answer:** Completed in the Part A results table using actual results from all five tests.
 
 ### 2. In Step 0.2, why was the request rate below 5 requests per second with 5 virtual users?
-**Answer:** Each VU sends a request, waits for its response, and sleeps for one second in every iteration. These delays make the achieved throughput lower than 5 requests per second for 5 VUs.
+**Answer:** Each VU waits for the HTTP response and sleeps for 1 second after each request, reducing the total request rate.
 
 ### 3. Did response time grow from average-load to stress? Explain using the operational envelope.
-**Answer:** A2 p(95) = **[ ] ms**, A3 p(95) = **[ ] ms**. **[STATE WHETHER IT GREW]**. The operational envelope is the load range in which the system can satisfy its performance requirements. **[EXPLAIN WHAT YOUR OBSERVED CHANGE DOES OR DOES NOT SUGGEST; REMEMBER THESE ARE SMALL LOADS ON A PUBLIC SITE.]**
+**Answer:** A2 p(95) = 1260 ms, A3 p(95) = 1270 ms. Response time increased slightly by 10 ms. This suggests little overall slowdown at these load levels, although the home-page threshold failed in both tests. The small public-site tests cannot establish the system's full operational envelope.
 
 ### 4. In the spike test, how long did response time take to return to normal after the spike?
-**Answer:** **[NUMBER] seconds** according to `reports/a4-spike.html`. **[EXPLAIN HOW YOU IDENTIFIED BASELINE AND RECOVERY ON THE GRAPH.]**
+**Answer:** Approximately 10–15 seconds after the load dropped. The graph shows response time returning to around 400–500 ms, near its earlier baseline.
 
 ### 5. In the soak test, did response time or error rate worsen over time? Name a defect that several hours of soak testing could reveal.
-**Answer:** **[COMPARE EARLY AND LATE MEASUREMENTS FROM A5]**. An example of a long-duration defect is a **memory leak**, which can gradually increase resource consumption and degrade performance.
+**Answer:** No. Response time fluctuated around 300–2200 ms early in the test but stabilized around 300–400 ms later. The HTTP failure rate remained at 0%. A longer soak test could reveal a memory leak.
 
 ### 6. Why use p(95) rather than the average in thresholds?
-**Answer:** An average can hide unusually slow requests. p(95) describes the response time met by 95% of requests, so it is more useful for assessing the experience of slower users and enforcing a percentile-based performance requirement.
+**Answer:** The average can hide slow requests. p(95) shows the response time within which 95% of requests finish, making it more useful for measuring performance.
 
 ### 7. Give two reasons public-site internet results may differ from results in a lab.
-**Answer:** (1) Internet network latency, routing, and congestion vary between the tester and the public site. (2) Other users may be sending traffic to the same shared QuickPizza service during the test, while a controlled lab may have different server resources and background load.
+**Answer:**
+1. Internet latency and network congestion can vary.
+2. Other users may generate traffic on the shared public server.
 
 ### 8. Why must you never run a stress, spike or breakpoint test with hundreds of users against a site you do not own?
-**Answer:** Large uncontrolled loads can degrade or interrupt other people's access to a service, create excessive costs, and amount to unauthorized disruptive testing. Only conduct high-load tests on systems you own or have written permission to test.
+**Answer:** It could overload the server, disrupt other users, and cause unauthorized service disruption.
 
 ### 9. Give one vague performance requirement for an everyday app, rewrite it as a testable requirement, and show K6 thresholds.
-**Everyday app:** **[APP YOU USE]**
+**Everyday app:** Instagram
 **Vague requirement:** "The app should load quickly."
-**Testable requirement:** **[DEFINE ACTION/ENDPOINT, USER LOAD, TEST DURATION, RESPONSE-TIME PERCENTILES, AND ACCEPTABLE FAILURE RATE.]**
+**Testable requirement:** With 10 concurrent users for 1 minute, 95% of feed requests must finish within 1000 ms, and fewer than 1% of requests may fail.
+
 **K6 thresholds:**
 
 ```javascript
-thresholds: {
-  http_req_duration: ['p(95)<[YOUR_MS_LIMIT]'],
-  http_req_failed: ['rate<[YOUR_FAILURE_RATE]'],
-}
+export const options = {
+  vus: 10,
+  duration: '1m',
+  thresholds: {
+    http_req_duration: ['p(95)<1000'],
+    http_req_failed: ['rate<0.01'],
+  },
+};
 ```
