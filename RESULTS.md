@@ -22,3 +22,9 @@
 - `iterations`: 20
 - Observations: The test completed exactly 20 iterations using 5 VUs and stopped automatically.
 
+### Step 0.6 — Thresholds
+- Normal run thresholds: FAIL
+- Normal run exit code: 99
+- Stricter run thresholds: FAIL
+- Stricter run exit code: 99
+
